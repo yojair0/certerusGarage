@@ -8,7 +8,11 @@ export const RedisProvider = {
   useFactory: async (): Promise<Redis> => {
     const Redis = await import('ioredis');
     const url = process.env.REDIS_URL;
-    const useTls = process.env.REDIS_TLS === 'true' || (url?.startsWith('rediss://') ?? false);
+    const explicitTls = process.env.REDIS_TLS;
+    const schemeIsRediss = url?.startsWith('rediss://') ?? false;
+    const schemeIsRedis = url?.startsWith('redis://') ?? false;
+    const disableTls = explicitTls === 'false' || schemeIsRedis;
+    const useTls = !disableTls && (explicitTls === 'true' || schemeIsRediss);
     const commonOptions: Partial<RedisOptions> = {
       lazyConnect: true,
       enableReadyCheck: false,
