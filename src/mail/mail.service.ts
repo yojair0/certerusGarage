@@ -60,10 +60,10 @@ export class MailService {
       
       this.logger.log(`✅ Email sent successfully to ${to}`);
       this.logger.debug(`   Message ID: ${info.messageId}`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`❌ Failed to send email to ${to}`);
-      this.logger.error(`   Error: ${error.message}`);
-      this.logger.error(`   Code: ${error.code}`);
+      this.logger.error(`   Error: ${error?.message || String(error)}`);
+      this.logger.error(`   Code: ${error?.code || 'N/A'}`);
       throw error;
     }
   }
