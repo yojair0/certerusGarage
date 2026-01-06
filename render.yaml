@@ -52,13 +52,8 @@ services:
           type: redis
           name: certerus-redis
           property: connectionString
-      - key: REDIS_PASSWORD
-        fromService:
-          type: redis
-          name: certerus-redis
-          property: password
       - key: REDIS_TLS
-        value: true # Render Redis usa TLS
+        value: false # Render Redis free tier no usa TLS
       
       
       - key: JWT_SECRET
@@ -66,9 +61,9 @@ services:
       
       # Email (Gmail con App Password)
       - key: EMAIL_USER
-        value: auxucn@gmail.com
+        value: datosbase666@gmail.com
       - key: EMAIL_PASS
-        value: zogf yldu mcrw nwtv
+        value: ulfkakhrlmwyplsp
       
       # Admin Emails
       - key: ADMIN_EMAILS
@@ -76,4 +71,4 @@ services:
       
       # Server Configuration (PORT y BASE_URL se configuran automáticamente por Render)
       - key: CLIENT_URL
-        value: https://garage-frontendd.vercel.app
+        value: https://certerus-garage.vercel.app,https://garage-frontendd.vercel.app,https://garage-frontendd-h1l2eh96e-atuning120s-projects.vercel.app
