@@ -62,8 +62,13 @@ export class AuthService {
         { purpose: JWT_PURPOSE.CONFIRM_EMAIL, sub: user.id, email: user.email },
         JWT_EXPIRES_IN.CONFIRM_EMAIL,
       );
-      this.logger.debug(`📧 Sending confirmation email to: ${user.email}`);
-      await this.mailService.sendConfirmationEmail(user.email, token);
+      
+      // Send email asynchronously (don't wait for it)
+      this.logger.debug(`📧 Queuing confirmation email to: ${user.email}`);
+      this.mailService.sendConfirmationEmail(user.email, token)
+        .then(() => this.logger.log(`✅ Confirmation email sent to ${dto.email}`))
+        .catch(err => this.logger.error(`❌ Failed to send email to ${dto.email}:`, err));
+      
       this.logger.log(`✅ Registration completed for ${dto.email}`);
     } catch (error) {
       this.logger.error(`❌ Registration error for ${dto.email}:`, error);
