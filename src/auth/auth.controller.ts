@@ -38,7 +38,7 @@ export class AuthController {
   }
 
   @Post('login')
-  public async login(@Body() dto: LoginDto): Promise<ApiResponse<{ access_token: string; user: Omit<User, 'password'> }>> {
+  public async login(@Body() dto: LoginDto): Promise<any> {
     const { accessToken, user } = await this.authService.login(dto);
     const safeUser = toSafeUser(user);
     
@@ -49,10 +49,14 @@ export class AuthController {
        this.logger.debug(`✅ Login Response Data Preview: ${JSON.stringify({ access_token: accessToken, user: safeUser })}`);
     }
 
+    // Returning a hybrid response to support different frontend structures
+    // (Both nested in 'data' and flat properties)
     return {
       success: true,
       message: 'Login successful',
       data: { access_token: accessToken, user: safeUser },
+      access_token: accessToken,
+      user: safeUser,
     };
   }
 
