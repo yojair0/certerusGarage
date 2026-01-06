@@ -4,4 +4,5 @@ import { JwtPayload } from '../../jwt/types/jwt-payload.type.js';
 
 export interface AuthRequest extends Request {
   user: JwtPayload;
+  params?: Record<string, string>;
 }
