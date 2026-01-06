@@ -28,8 +28,8 @@ async function bootstrap(): Promise<void> {
     credentials: true,
   });
 
-  const port = required('PORT');
-  const baseUrl = required('BASE_URL');
+  const port = process.env.PORT || '3000';
+  const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
 
   await app.listen(port);
   logger.log(`🚀 Application is running on ${baseUrl}`);

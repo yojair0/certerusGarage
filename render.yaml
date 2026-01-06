@@ -69,10 +69,6 @@ services:
       - key: ADMIN_EMAILS
         value: benjamin.gilberto@alumnos.ucn.cl, jairo.vergara@alumnos.ucn.cl, cristian.nunez@alumnos.ucn.cl
       
-      # Server Configuration
-      - key: PORT
-        value: 3000
-      - key: BASE_URL
-        sync: false # Render lo generará automáticamente como https://certerus-backend.onrender.com
+      # Server Configuration (PORT y BASE_URL se configuran automáticamente por Render)
       - key: CLIENT_URL
-        value: https://certerus-garage.vercel.app
+        value: https://garage-frontendd.vercel.app
