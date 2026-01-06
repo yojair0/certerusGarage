@@ -2,13 +2,15 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import nodemailer from 'nodemailer';
 
 import { required } from '../common/config/env.config.js';
 
 @Injectable()
 export class MailService {
+  private readonly logger = new Logger('MailService');
+  
   private readonly transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
@@ -45,12 +47,25 @@ export class MailService {
     subject: string,
     html: string,
   ): Promise<void> {
-    await this.transporter.sendMail({
-      from: `"No Reply" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html,
-    });
+    try {
+      this.logger.debug(`📤 Attempting to send email to: ${to}`);
+      this.logger.debug(`   Subject: ${subject}`);
+      
+      const info = await this.transporter.sendMail({
+        from: `"No Reply" <${process.env.EMAIL_USER}>`,
+        to,
+        subject,
+        html,
+      });
+      
+      this.logger.log(`✅ Email sent successfully to ${to}`);
+      this.logger.debug(`   Message ID: ${info.messageId}`);
+    } catch (error) {
+      this.logger.error(`❌ Failed to send email to ${to}`);
+      this.logger.error(`   Error: ${error.message}`);
+      this.logger.error(`   Code: ${error.code}`);
+      throw error;
+    }
   }
 
   public async sendConfirmationEmail(to: string, token: string): Promise<void> {
