@@ -53,7 +53,7 @@ export class AuthService {
         name: dto.name,
         email: dto.email,
         password: hashedPassword,
-        role: isAdmin ? ROLE.ADMIN : undefined,
+        role: isAdmin ? ROLE.ADMIN : ROLE.CLIENT,
       } as User);
 
       this.logger.debug(`✅ User saved with ID: ${user.id}`);

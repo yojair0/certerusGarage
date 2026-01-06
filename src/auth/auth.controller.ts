@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Post, Query, Redirect } from '@nestjs/common';
 
 import { AuthService } from './auth.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
@@ -102,15 +102,13 @@ export class AuthController {
   // ===== GET METHODS =====
 
   @Get('confirm-email')
+  @Redirect()
   public async confirmEmail(
     @Query('token') token: string,
-  ): Promise<ApiResponse<null>> {
+  ): Promise<{ url: string }> {
     await this.authService.confirmEmail(token);
-    return {
-      success: true,
-      message: 'Email confirmed successfully',
-      data: null,
-    };
+    const frontendUrl = process.env.CLIENT_URL?.split(',')[0] || 'http://localhost:3001';
+    return { url: `${frontendUrl}?emailConfirmed=true` };
   }
 
   @Get('confirm-email-update')
