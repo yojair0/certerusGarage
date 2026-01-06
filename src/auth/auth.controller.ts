@@ -8,7 +8,7 @@ import { RequestUnlockDto } from './dto/request-unlock.dto.js';
 import { ResetPasswordAfterRevertDto } from './dto/reset-password-after-revert.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
 
-import { ApiResponse } from '../common/index.js';
+import { ApiResponse, toSafeUser } from '../common/index.js';
 import { User } from '../users/entities/user.entity.js';
 
 @Controller('auth')
@@ -40,8 +40,15 @@ export class AuthController {
   @Post('login')
   public async login(@Body() dto: LoginDto): Promise<ApiResponse<{ access_token: string; user: Omit<User, 'password'> }>> {
     const { accessToken, user } = await this.authService.login(dto);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...safeUser } = user;
+    const safeUser = toSafeUser(user);
+    
+    // Explicitly verify role existence for debugging
+    if (!safeUser.role) {
+       this.logger.warn(`⚠️ User ${safeUser.email} has NO ROLE in response object! Raw: ${JSON.stringify(safeUser)}`);
+    } else {
+       this.logger.debug(`✅ Login Response Data Preview: ${JSON.stringify({ access_token: accessToken, user: safeUser })}`);
+    }
+
     return {
       success: true,
       message: 'Login successful',
