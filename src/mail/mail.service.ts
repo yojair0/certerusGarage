@@ -16,7 +16,7 @@ export class MailService {
       pass: required('EMAIL_PASS'),
     },
   });
-  private readonly baseUrl = required('BASE_URL');
+  private readonly baseUrl = process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
 
   private async loadTemplate(name: string, token: string): Promise<string> {
     const __filename = fileURLToPath(import.meta.url);
