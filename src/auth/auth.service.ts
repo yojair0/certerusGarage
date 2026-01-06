@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import bcrypt from 'bcryptjs';
@@ -26,6 +27,8 @@ import { UsersService } from '../users/users.service.js';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger('AuthService');
+
   public constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: AppJwtService,
@@ -36,37 +39,61 @@ export class AuthService {
   // ===== POST METHODS (Credentials, registration & recovery) =====
 
   public async create(dto: CreateUserDto): Promise<void> {
-    await this.usersService.ensureEmailIsAvailable(dto.email);
+    this.logger.debug(`📤 Starting registration for email: ${dto.email}`);
+    
+    try {
+      await this.usersService.ensureEmailIsAvailable(dto.email);
+      this.logger.debug(`✅ Email ${dto.email} is available`);
 
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const isAdmin = this.isAdminEmail(dto.email);
-    const user = await this.usersService.save({
-      name: dto.name,
-      email: dto.email,
-      password: hashedPassword,
-      role: isAdmin ? ROLE.ADMIN : undefined,
-    } as User);
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
+      const isAdmin = this.isAdminEmail(dto.email);
+      this.logger.debug(`📝 Creating user: ${dto.name} (${dto.email}), isAdmin: ${isAdmin}`);
+      
+      const user = await this.usersService.save({
+        name: dto.name,
+        email: dto.email,
+        password: hashedPassword,
+        role: isAdmin ? ROLE.ADMIN : undefined,
+      } as User);
 
-    const token = this.jwtService.sign(
-      { purpose: JWT_PURPOSE.CONFIRM_EMAIL, sub: user.id, email: user.email },
-      JWT_EXPIRES_IN.CONFIRM_EMAIL,
-    );
-    await this.mailService.sendConfirmationEmail(user.email, token);
+      this.logger.debug(`✅ User saved with ID: ${user.id}`);
+
+      const token = this.jwtService.sign(
+        { purpose: JWT_PURPOSE.CONFIRM_EMAIL, sub: user.id, email: user.email },
+        JWT_EXPIRES_IN.CONFIRM_EMAIL,
+      );
+      this.logger.debug(`📧 Sending confirmation email to: ${user.email}`);
+      await this.mailService.sendConfirmationEmail(user.email, token);
+      this.logger.log(`✅ Registration completed for ${dto.email}`);
+    } catch (error) {
+      this.logger.error(`❌ Registration error for ${dto.email}:`, error);
+      throw error;
+    }
   }
 
   public async login(dto: LoginDto): Promise<{ accessToken: string; user: User }> {
-    const user = await this.validateUserCredentials(dto);
+    this.logger.debug(`🔐 Login attempt for email: ${dto.email}`);
+    
+    try {
+      const user = await this.validateUserCredentials(dto);
+      this.logger.debug(`✅ Credentials validated for ${dto.email}`);
 
-    if (user.role !== ROLE.ADMIN && this.isAdminEmail(user.email)) {
-      await this.usersService.promoteToAdmin(user.id);
-      user.role = ROLE.ADMIN; // Update local instance to reflect change
+      if (user.role !== ROLE.ADMIN && this.isAdminEmail(user.email)) {
+        this.logger.debug(`👤 Promoting ${dto.email} to ADMIN role`);
+        await this.usersService.promoteToAdmin(user.id);
+        user.role = ROLE.ADMIN; // Update local instance to reflect change
+      }
+
+      const accessToken = this.jwtService.sign(
+        { purpose: JWT_PURPOSE.SESSION, sub: user.id, email: user.email, role: user.role },
+        JWT_EXPIRES_IN.SESSION,
+      );
+      this.logger.log(`✅ Login successful for ${dto.email}`);
+      return { accessToken, user };
+    } catch (error) {
+      this.logger.error(`❌ Login error for ${dto.email}:`, error);
+      throw error;
     }
-
-    const accessToken = this.jwtService.sign(
-      { purpose: JWT_PURPOSE.SESSION, sub: user.id, email: user.email, role: user.role },
-      JWT_EXPIRES_IN.SESSION,
-    );
-    return { accessToken, user };
   }
 
   public async requestPasswordReset(

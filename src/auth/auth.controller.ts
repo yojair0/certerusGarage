@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Post, Query } from '@nestjs/common';
 
 import { AuthService } from './auth.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
@@ -13,6 +13,8 @@ import { User } from '../users/entities/user.entity.js';
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger('AuthController');
+
   public constructor(private readonly authService: AuthService) {}
 
   // ===== POST METHODS =====
@@ -21,12 +23,18 @@ export class AuthController {
   public async create(
     @Body() dto: CreateUserDto,
   ): Promise<ApiResponse<null>> {
-    await this.authService.create(dto);
-    return {
-      success: true,
-      message: 'Confirmation email sent to ' + dto.email,
-      data: null,
-    };
+    this.logger.debug(`📩 POST /auth - Registration request for ${dto.email}`);
+    try {
+      await this.authService.create(dto);
+      return {
+        success: true,
+        message: 'Confirmation email sent to ' + dto.email,
+        data: null,
+      };
+    } catch (error) {
+      this.logger.error(`❌ Registration endpoint error:`, error);
+      throw error;
+    }
   }
 
   @Post('login')

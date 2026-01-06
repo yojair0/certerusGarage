@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
   ForbiddenException,
@@ -24,6 +25,8 @@ import { MailService } from '../mail/mail.service.js';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger('UsersService');
+
   public constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -89,8 +92,15 @@ export class UsersService {
     return toSafeUser(user);
   }
 
-  public findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOneBy({ email });
+  public async findByEmail(email: string): Promise<User | null> {
+    this.logger.debug(`🔎 Finding user by email: ${email}`);
+    const user = await this.usersRepository.findOneBy({ email });
+    if (user) {
+      this.logger.debug(`✅ User found with email: ${email}`);
+    } else {
+      this.logger.debug(`❌ User NOT found with email: ${email}`);
+    }
+    return user;
   }
 
   public async findMe(id: number): Promise<SafeUser> {
@@ -205,8 +215,13 @@ export class UsersService {
   // ===== AUXILIARY METHODS =====
 
   public async ensureEmailIsAvailable(email: string): Promise<void> {
+    this.logger.debug(`🔍 Checking if email ${email} is available...`);
     const user = await this.findByEmail(email);
-    if (user) throw new ConflictException('Email is already registered');
+    if (user) {
+      this.logger.warn(`⚠️  Email ${email} is already registered`);
+      throw new ConflictException('Email is already registered');
+    }
+    this.logger.debug(`✅ Email ${email} is available`);
   }
 
   private async ensurePasswordIsValid(
