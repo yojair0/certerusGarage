@@ -12,7 +12,7 @@ services:
     runtime: node
     plan: free
     region: oregon # Cambia a 'frankfurt' si prefieres Europa
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npx nest build && cp -r src/mail/templates dist/mail/templates
     startCommand: npm run start:prod
     healthCheckPath: /
     envVars:
