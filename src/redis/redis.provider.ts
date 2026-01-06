@@ -10,10 +10,13 @@ export const RedisProvider = {
     const url = process.env.REDIS_URL;
     const useTls = process.env.REDIS_TLS === 'true' || (url?.startsWith('rediss://') ?? false);
     const commonOptions: Partial<RedisOptions> = {
-      lazyConnect: false,
+      lazyConnect: true,
+      enableReadyCheck: false,
       maxRetriesPerRequest: null,
-      retryStrategy: (times: number) => Math.min(times * 500, 5_000),
-      connectTimeout: 10_000,
+      retryStrategy: (times: number) => Math.min(times * 500, 10_000),
+      connectTimeout: 15_000,
+      commandTimeout: 15_000,
+      keepAlive: 10_000,
     };
 
     if (url) {
