@@ -47,6 +47,11 @@ services:
           type: redis
           name: certerus-redis
           property: port
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: certerus-redis
+          property: connectionString
       - key: REDIS_PASSWORD
         fromService:
           type: redis
