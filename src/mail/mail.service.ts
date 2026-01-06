@@ -10,11 +10,16 @@ import { required } from '../common/config/env.config.js';
 @Injectable()
 export class MailService {
   private readonly transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465, // Puerto seguro para Render (TLS)
+    secure: true, // Usar TLS
     auth: {
       user: required('EMAIL_USER'),
       pass: required('EMAIL_PASS'),
     },
+    connectionUrl: undefined, // Asegurar que no se usa connectionUrl
+    connectionTimeout: 10000, // 10 segundos
+    socketTimeout: 10000, // 10 segundos
   });
   private readonly baseUrl = process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
 
