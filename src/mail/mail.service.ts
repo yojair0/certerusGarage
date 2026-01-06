@@ -11,16 +11,13 @@ import { required } from '../common/config/env.config.js';
 export class MailService {
   private readonly transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465, // Puerto seguro para Render (TLS)
-    secure: true, // Usar TLS
+    port: 465,
+    secure: true,
     auth: {
       user: required('EMAIL_USER'),
       pass: required('EMAIL_PASS'),
     },
-    connectionUrl: undefined, // Asegurar que no se usa connectionUrl
-    connectionTimeout: 10000, // 10 segundos
-    socketTimeout: 10000, // 10 segundos
-  });
+  } as any);
   private readonly baseUrl = process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
 
   private async loadTemplate(name: string, token: string): Promise<string> {
