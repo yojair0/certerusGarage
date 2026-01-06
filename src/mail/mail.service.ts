@@ -2,24 +2,39 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import nodemailer from 'nodemailer';
 
 import { required } from '../common/config/env.config.js';
 
 @Injectable()
-export class MailService {
+export class MailService implements OnModuleInit {
   private readonly logger = new Logger('MailService');
   
   private readonly transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false, // STARTTLS
+    requireTLS: true,
     auth: {
       user: required('EMAIL_USER'),
       pass: required('EMAIL_PASS'),
     },
+    connectionTimeout: 15000,
+    socketTimeout: 15000,
   } as any);
+
+  async onModuleInit(): Promise<void> {
+    try {
+      this.logger.debug('🔍 Verificando conexión SMTP con Gmail...');
+      await this.transporter.verify();
+      this.logger.log('✅ Conexión SMTP verificada');
+    } catch (error: any) {
+      this.logger.error('❌ Falló la verificación SMTP');
+      this.logger.error(`   Error: ${error?.message || String(error)}`);
+      this.logger.error(`   Code: ${error?.code || 'N/A'}`);
+    }
+  }
   private readonly baseUrl = process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
 
   private async loadTemplate(name: string, token: string): Promise<string> {
