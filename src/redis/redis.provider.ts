@@ -8,9 +8,16 @@ export const RedisProvider = {
     const Redis = await import('ioredis');
     const url = process.env.REDIS_URL;
     const useTls = process.env.REDIS_TLS === 'true' || (url?.startsWith('rediss://') ?? false);
+    const commonOptions = {
+      lazyConnect: false,
+      maxRetriesPerRequest: null,
+      retryStrategy: (times: number) => Math.min(times * 500, 5_000),
+      connectTimeout: 10_000,
+    } satisfies Partial<Redis.RedisOptions>;
 
     if (url) {
-      return new Redis.default(url, useTls ? { tls: { rejectUnauthorized: false } } : {});
+      const tlsOptions = useTls ? { tls: { rejectUnauthorized: false } } : {};
+      return new Redis.default(url, { ...commonOptions, ...tlsOptions });
     }
 
     const host = required('REDIS_HOST');
@@ -22,6 +29,7 @@ export const RedisProvider = {
       port,
       ...(useTls ? { tls: { servername: host, rejectUnauthorized: false } } : {}),
       ...(password ? { password } : {}),
+      ...commonOptions,
     });
   },
 };
