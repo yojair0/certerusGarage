@@ -51,7 +51,7 @@ services:
         fromService:
           type: redis
           name: certerus-redis
-          property: connectionString
+          property: password
       - key: REDIS_TLS
         value: true # Render Redis usa TLS
       
