@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import sgMail from '@sendgrid/mail';
 import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 
@@ -11,7 +12,10 @@ import { required } from '../common/config/env.config.js';
 @Injectable()
 export class MailService implements OnModuleInit {
   private readonly logger = new Logger('MailService');
-  private readonly useResend = !!process.env.RESEND_API_KEY;
+  
+  // Prioridad: SendGrid > Resend > SMTP
+  private readonly useSendGrid = !!process.env.SENDGRID_API_KEY;
+  private readonly useResend = !this.useSendGrid && !!process.env.RESEND_API_KEY;
   private readonly resend = this.useResend ? new Resend(process.env.RESEND_API_KEY!) : null;
   
   private readonly transporter = nodemailer.createTransport({
@@ -29,9 +33,12 @@ export class MailService implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     try {
-      if (this.useResend) {
+      if (this.useSendGrid) {
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+        this.logger.debug('🔍 Usando proveedor SendGrid (API) para emails');
+        this.logger.log('✅ SendGrid inicializado');
+      } else if (this.useResend) {
         this.logger.debug('🔍 Usando proveedor Resend (API) para emails');
-        // Resend no requiere verificación de conexión, probamos un ping básico
         this.logger.log('✅ Resend inicializado');
       } else {
         this.logger.debug('🔍 Verificando conexión SMTP con Gmail...');
@@ -39,7 +46,7 @@ export class MailService implements OnModuleInit {
         this.logger.log('✅ Conexión SMTP verificada');
       }
     } catch (error: any) {
-      this.logger.error('❌ Falló la verificación SMTP');
+      this.logger.error('❌ Falló la verificación de email');
       this.logger.error(`   Error: ${error?.message || String(error)}`);
       this.logger.error(`   Code: ${error?.code || 'N/A'}`);
     }
@@ -75,7 +82,18 @@ export class MailService implements OnModuleInit {
       this.logger.debug(`📤 Attempting to send email to: ${to}`);
       this.logger.debug(`   Subject: ${subject}`);
 
-      if (this.useResend && this.resend) {
+      if (this.useSendGrid) {
+        const fromEmail = process.env.SENDGRID_FROM || process.env.EMAIL_USER || 'noreply@certerus.com';
+        const msg = {
+          to,
+          from: fromEmail,
+          subject,
+          html,
+        };
+        const result = await sgMail.send(msg);
+        this.logger.log(`✅ Email sent via SendGrid to ${to}`);
+        this.logger.debug(`   SendGrid Response: ${result[0].statusCode}`);
+      } else if (this.useResend && this.resend) {
         const fromEmail = process.env.RESEND_FROM || 'onboarding@resend.dev';
         const result = await this.resend.emails.send({
           from: fromEmail,
