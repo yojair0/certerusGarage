@@ -11,7 +11,7 @@ export class VehicleOwnerGuard implements CanActivate {
   public async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<AuthRequest>();
     const userId = req.user?.sub;
-    const vehicleId = parseInt(req.params?.id, 10);
+    const vehicleId = parseInt(req.params?.id ?? '', 10);
 
     if (!userId) {
       throw new ForbiddenException('Missing authenticated user');
