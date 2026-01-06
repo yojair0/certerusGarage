@@ -28,6 +28,11 @@ async function bootstrap(): Promise<void> {
     credentials: true,
   });
 
+  // Simple health endpoint for Render health checks
+  app.getHttpAdapter().get('/health', (_req, res) => {
+    res.status(200).send({ status: 'ok' });
+  });
+
   const port = process.env.PORT || '3000';
   const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
 

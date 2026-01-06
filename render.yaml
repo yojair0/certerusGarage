@@ -14,7 +14,7 @@ services:
     region: oregon # Cambia a 'frankfurt' si prefieres Europa
     buildCommand: npm install && npm run build && cp -r src/mail/templates dist/mail/templates
     startCommand: npm run start:prod
-    healthCheckPath: /
+    healthCheckPath: /health
     envVars:
       # Node
       - key: NODE_ENV
