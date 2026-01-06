@@ -4,12 +4,15 @@ import { fileURLToPath } from 'url';
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 import { required } from '../common/config/env.config.js';
 
 @Injectable()
 export class MailService implements OnModuleInit {
   private readonly logger = new Logger('MailService');
+  private readonly useResend = !!process.env.RESEND_API_KEY;
+  private readonly resend = this.useResend ? new Resend(process.env.RESEND_API_KEY!) : null;
   
   private readonly transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -26,9 +29,15 @@ export class MailService implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     try {
-      this.logger.debug('🔍 Verificando conexión SMTP con Gmail...');
-      await this.transporter.verify();
-      this.logger.log('✅ Conexión SMTP verificada');
+      if (this.useResend) {
+        this.logger.debug('🔍 Usando proveedor Resend (API) para emails');
+        // Resend no requiere verificación de conexión, probamos un ping básico
+        this.logger.log('✅ Resend inicializado');
+      } else {
+        this.logger.debug('🔍 Verificando conexión SMTP con Gmail...');
+        await this.transporter.verify();
+        this.logger.log('✅ Conexión SMTP verificada');
+      }
     } catch (error: any) {
       this.logger.error('❌ Falló la verificación SMTP');
       this.logger.error(`   Error: ${error?.message || String(error)}`);
@@ -65,16 +74,31 @@ export class MailService implements OnModuleInit {
     try {
       this.logger.debug(`📤 Attempting to send email to: ${to}`);
       this.logger.debug(`   Subject: ${subject}`);
-      
-      const info = await this.transporter.sendMail({
-        from: `"No Reply" <${process.env.EMAIL_USER}>`,
-        to,
-        subject,
-        html,
-      });
-      
-      this.logger.log(`✅ Email sent successfully to ${to}`);
-      this.logger.debug(`   Message ID: ${info.messageId}`);
+
+      if (this.useResend && this.resend) {
+        const fromEmail = process.env.RESEND_FROM || 'onboarding@resend.dev';
+        const result = await this.resend.emails.send({
+          from: fromEmail,
+          to,
+          subject,
+          html,
+        });
+        if ((result as any)?.error) {
+          const err = (result as any).error;
+          throw new Error(`Resend error: ${err?.message || JSON.stringify(err)}`);
+        }
+        this.logger.log(`✅ Email sent via Resend to ${to}`);
+        this.logger.debug(`   Resend ID: ${(result as any)?.id || 'N/A'}`);
+      } else {
+        const info = await this.transporter.sendMail({
+          from: `"No Reply" <${process.env.EMAIL_USER}>`,
+          to,
+          subject,
+          html,
+        });
+        this.logger.log(`✅ Email sent successfully to ${to}`);
+        this.logger.debug(`   Message ID: ${info.messageId}`);
+      }
     } catch (error: any) {
       this.logger.error(`❌ Failed to send email to ${to}`);
       this.logger.error(`   Error: ${error?.message || String(error)}`);

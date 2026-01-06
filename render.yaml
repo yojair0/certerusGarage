@@ -64,6 +64,11 @@ services:
         value: datosbase666@gmail.com
       - key: EMAIL_PASS
         value: ulfkakhrlmwyplsp
+      # Email Provider (Resend API)
+      - key: RESEND_API_KEY
+        value: set-in-dashboard
+      - key: RESEND_FROM
+        value: onboarding@resend.dev
       
       # Admin Emails
       - key: ADMIN_EMAILS
