@@ -36,6 +36,3 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
-
-# Azure deployment info
-azure-deployment-info.txt

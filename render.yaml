@@ -1,0 +1,78 @@
+services:
+  # Redis gratuito en Render
+  - type: redis
+    name: certerus-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: [] # Solo accesible desde otros servicios de Render
+
+  # Backend NestJS
+  - type: web
+    name: certerus-backend
+    runtime: node
+    plan: free
+    region: oregon # Cambia a 'frankfurt' si prefieres Europa
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /
+    envVars:
+      # Node
+      - key: NODE_ENV
+        value: production
+      
+      # Database PostgreSQL (NeonDB)
+      - key: DATABASE_HOST
+        value: ep-sweet-bread-accnu6w2-pooler.sa-east-1.aws.neon.tech
+      - key: DATABASE_PORT
+        value: 5432
+      - key: DATABASE_USER
+        value: neondb_owner
+      - key: DATABASE_PASSWORD
+        value: npg_mt4JbkgWilv8
+      - key: DATABASE_NAME
+        value: neondb
+      - key: DATABASE_SSL
+        value: true # NeonDB requiere SSL
+      - key: DB_SYNCHRONIZE
+        value: false # NUNCA true en producción
+      
+      
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: certerus-redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: certerus-redis
+          property: port
+      - key: REDIS_PASSWORD
+        fromService:
+          type: redis
+          name: certerus-redis
+          property: connectionString
+      - key: REDIS_TLS
+        value: true # Render Redis usa TLS
+      
+      
+      - key: JWT_SECRET
+        value: N5dc8lP4OmNNhEYh3QN1yHHLz8Rtlwn/HLOc14q62DN4Go9/YvbtELcSDpV9M5z8b7A85NbKu3gq3PrdEw4p7A
+      
+      # Email (Gmail con App Password)
+      - key: EMAIL_USER
+        value: auxucn@gmail.com
+      - key: EMAIL_PASS
+        value: zogf yldu mcrw nwtv
+      
+      # Admin Emails
+      - key: ADMIN_EMAILS
+        value: benjamin.gilberto@alumnos.ucn.cl, jairo.vergara@alumnos.ucn.cl, cristian.nunez@alumnos.ucn.cl
+      
+      # Server Configuration
+      - key: PORT
+        value: 3000
+      - key: BASE_URL
+        sync: false # Render lo generará automáticamente como https://certerus-backend.onrender.com
+      - key: CLIENT_URL
+        value: https://certerus-garage.vercel.app

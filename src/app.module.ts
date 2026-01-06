@@ -36,7 +36,7 @@ import { WorkOrdersModule } from './work-orders/work-orders.module.js';
       entities: [User, Vehicle, MechanicSchedule, Appointment, WorkOrder, WorkOrderItem, WorkOrderNote, Notification, InventoryItem],
       // Use env flag to control schema sync (never enable in production)
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
-      // Enable SSL for managed clouds like Azure when DATABASE_SSL=true
+      // Enable SSL for managed databases (NeonDB, Render, etc.)
       ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
     }),
     GlobalJwtModule,
