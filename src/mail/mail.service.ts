@@ -51,7 +51,8 @@ export class MailService implements OnModuleInit {
       this.logger.error(`   Code: ${error?.code || 'N/A'}`);
     }
   }
-  private readonly baseUrl = process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
+  // In production, FRONTEND_URL must be set to the public URL of the frontend (e.g. https://my-app.vercel.app)
+  private readonly frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
   private async loadTemplate(name: string, token: string): Promise<string> {
     const __filename = fileURLToPath(import.meta.url);
@@ -68,7 +69,7 @@ export class MailService implements OnModuleInit {
     }
 
     let html = await fs.readFile(templatePath, 'utf8');
-    const url = `${this.baseUrl}/auth/${token}`;
+    const url = `${this.frontendUrl}/auth/${token}`;
     html = html.replace(/{{LINK}}/g, url);
     return html;
   }
