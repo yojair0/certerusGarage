@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Post, Query, Redirect } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Logger, Post, Query, Redirect } from '@nestjs/common';
 
 import { AuthService } from './auth.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
@@ -74,9 +74,16 @@ export class AuthController {
 
   @Post('reset-password')
   public async resetPassword(
-    @Query('token') token: string,
+    @Query('token') queryToken: string,
     @Body() dto: ResetPasswordDto,
   ): Promise<ApiResponse<null>> {
+    // Robustness: Support both Query param (New Frontend) and Body (Old Frontend)
+    const token = queryToken || dto.token;
+    
+    if (!token) {
+        throw new BadRequestException('Token is required');
+    }
+
     await this.authService.resetPassword(token, dto);
     return {
       success: true,
