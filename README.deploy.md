@@ -28,7 +28,7 @@ Tu backend estará disponible en:
 - **URL**: `https://certerus-backend.onrender.com`
 
 El frontend ya está en:
-- **URL**: `https://garage-frontendd.vercel.app`
+- **URL**: `https://certerus-garage.vercel.app`
 
 ## 📋 Variables de Entorno
 

@@ -51,8 +51,16 @@ export class MailService implements OnModuleInit {
       this.logger.error(`   Code: ${error?.code || 'N/A'}`);
     }
   }
-  // In production, FRONTEND_URL must be set to the public URL of the frontend (e.g. https://my-app.vercel.app)
-  private readonly frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  
+  // In production, we use CLIENT_URL (list of allowed origins) or FRONTEND_URL
+  private get frontendUrl(): string {
+     // Use FRONTEND_URL if set
+     if (process.env.FRONTEND_URL) return process.env.FRONTEND_URL;
+     // Fallback to first CLIENT_URL if set
+     if (process.env.CLIENT_URL) return process.env.CLIENT_URL.split(',')[0].trim();
+     // Default for local development
+     return 'http://localhost:5173';
+  }
 
   private async loadTemplate(name: string, token: string): Promise<string> {
     const __filename = fileURLToPath(import.meta.url);

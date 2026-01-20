@@ -118,7 +118,7 @@ export class AuthController {
     @Query('token') token: string,
   ): Promise<{ url: string }> {
     await this.authService.confirmEmail(token);
-    const frontendUrl = process.env.CLIENT_URL?.split(',')[0] || 'http://localhost:3001';
+    const frontendUrl = process.env.CLIENT_URL?.split(',')[0] || 'http://localhost:5173';
     return { url: `${frontendUrl}?emailConfirmed=true` };
   }
 
