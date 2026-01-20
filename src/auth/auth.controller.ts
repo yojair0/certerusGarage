@@ -113,13 +113,15 @@ export class AuthController {
   // ===== GET METHODS =====
 
   @Get('confirm-email')
-  @Redirect()
   public async confirmEmail(
     @Query('token') token: string,
-  ): Promise<{ url: string }> {
+  ): Promise<ApiResponse<null>> {
     await this.authService.confirmEmail(token);
-    const frontendUrl = process.env.CLIENT_URL?.split(',')[0] || 'http://localhost:5173';
-    return { url: `${frontendUrl}?emailConfirmed=true` };
+    return {
+      success: true,
+      message: 'Account confirmed successfully',
+      data: null,
+    };
   }
 
   @Get('confirm-email-update')
