@@ -52,6 +52,8 @@ export class MailService implements OnModuleInit {
     }
   }
   
+  private readonly baseUrl = process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
+
   // In production, we use CLIENT_URL (list of allowed origins) or FRONTEND_URL
   private get frontendUrl(): string {
      // Use FRONTEND_URL if set
@@ -62,7 +64,7 @@ export class MailService implements OnModuleInit {
      return 'http://localhost:5173';
   }
 
-  private async loadTemplate(name: string, token: string): Promise<string> {
+  private async loadTemplate(name: string, pathSegment: string, useBackendUrl: boolean = false): Promise<string> {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     
@@ -77,7 +79,18 @@ export class MailService implements OnModuleInit {
     }
 
     let html = await fs.readFile(templatePath, 'utf8');
-    const url = `${this.frontendUrl}/auth/${token}`;
+    
+    const baseUrl = useBackendUrl ? this.baseUrl : this.frontendUrl;
+    // Ensure we don't have double slashes if pathSegment starts with /
+    const cleanPath = pathSegment.startsWith('/') ? pathSegment.substring(1) : pathSegment;
+    // For backend, we use /auth prefix usually? Let's check how it was called.
+    // calls passed "confirm-email?token=..." which are relative to auth controller usually
+    // But loadTemplate was constructing ${this.frontendUrl}/auth/${token}
+    
+    const url = useBackendUrl 
+        ? `${baseUrl}/auth/${cleanPath}` 
+        : `${baseUrl}/auth/${cleanPath}`;
+
     html = html.replace(/{{LINK}}/g, url);
     return html;
   }
@@ -135,9 +148,11 @@ export class MailService implements OnModuleInit {
   }
 
   public async sendConfirmationEmail(to: string, token: string): Promise<void> {
+    // Use Backend URL (true) for registration confirmation to support redirect flow
     const html = await this.loadTemplate(
       'confirm-email.html',
       `confirm-email?token=${token}`,
+      true // useBackendUrl
     );
     await this.sendEmail(to, '✅ Confirm your account', html);
   }
