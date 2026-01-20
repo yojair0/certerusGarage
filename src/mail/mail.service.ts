@@ -154,7 +154,7 @@ export class MailService implements OnModuleInit {
       `confirm-email?token=${token}`,
       true // useBackendUrl
     );
-    await this.sendEmail(to, '✅ Confirm your account', html);
+    await this.sendEmail(to, '✅ Confirma tu cuenta', html);
   }
 
   public async sendConfirmationUpdatedEmail(
@@ -165,7 +165,7 @@ export class MailService implements OnModuleInit {
       'confirm-email-update.html',
       `confirm-email-update?token=${token}`,
     );
-    await this.sendEmail(to, '📩 Confirm your new email', html);
+    await this.sendEmail(to, '📩 Confirma tu nuevo correo', html);
   }
 
   public async sendRevertEmailChange(to: string, token: string): Promise<void> {
@@ -173,7 +173,7 @@ export class MailService implements OnModuleInit {
       'revert-email.html',
       `revert-email?token=${token}`,
     );
-    await this.sendEmail(to, '🔄 Revert email change', html);
+    await this.sendEmail(to, '🔄 Revertir cambio de correo', html);
   }
 
   public async sendPasswordReset(to: string, token: string): Promise<void> {
@@ -181,7 +181,7 @@ export class MailService implements OnModuleInit {
       'reset-password.html',
       `reset-password?token=${token}`,
     );
-    await this.sendEmail(to, '🔐 Reset your password', html);
+    await this.sendEmail(to, '🔐 Restablecer contraseña', html);
   }
 
   public async sendUnlockAccount(to: string, token: string): Promise<void> {
@@ -189,6 +189,6 @@ export class MailService implements OnModuleInit {
       'unlock-account.html',
       `unlock-account?token=${token}`,
     );
-    await this.sendEmail(to, '🔓 Unlock your account', html);
+    await this.sendEmail(to, '🔓 Desbloquea tu cuenta', html);
   }
 }
