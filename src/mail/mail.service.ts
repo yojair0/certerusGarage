@@ -42,8 +42,13 @@ export class MailService implements OnModuleInit {
         this.logger.log('✅ Resend inicializado');
       } else {
         this.logger.debug('🔍 Verificando conexión SMTP con Gmail...');
-        await this.transporter.verify();
-        this.logger.log('✅ Conexión SMTP verificada');
+        // No usamos await aquí para no bloquear el inicio de la aplicación si SMTP falla o tarda
+        this.transporter.verify()
+          .then(() => this.logger.log('✅ Conexión SMTP verificada'))
+          .catch((err) => {
+             this.logger.error('❌ Falló la verificación inicial de SMTP (No bloqueante)');
+             this.logger.error(`   Error: ${err?.message || String(err)}`);
+          });
       }
     } catch (error: any) {
       this.logger.error('❌ Falló la verificación de email');
