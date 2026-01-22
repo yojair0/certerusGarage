@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Delete, Body, Param, UseGuards, Request, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Delete, Body, Param, UseGuards, Request, Query, HttpCode, HttpStatus, Logger } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { AppointmentsService } from './appointments.service.js';
@@ -13,6 +13,8 @@ import { RoleGuard, Roles } from '../guards/role.guard.js';
 @Controller('appointments')
 @UseGuards(AuthGuard('jwt'))
 export class AppointmentsController {
+  private readonly logger = new Logger('AppointmentsController');
+
   public constructor(private readonly appointmentsService: AppointmentsService) {}
 
   @Get()
@@ -23,6 +25,9 @@ export class AppointmentsController {
     @Query('mechanicId') mechanicId: number | undefined,
     @Query('date') date: string | undefined,
   ): Promise<ApiResponse<SafeAppointmentForClient[] | SafeAppointmentForMechanic[]>> {
+    this.logger.debug(`📥 Obtener citas para: ${req.user.email} (${req.user.role})`);
+    this.logger.debug(`   Filtros -> status: ${status}, date: ${date}`);
+
     const appointments = await this.appointmentsService.findAll(
       req.user.sub,
       req.user.role,
@@ -32,6 +37,8 @@ export class AppointmentsController {
       date,
     );
     
+    this.logger.log(`✅ Se encontraron ${appointments.length} citas para el usuario ${req.user.sub}`);
+
     const data = req.user.role === ROLE.CLIENT
       ? appointments.map(appointment => toSafeAppointmentForClient(appointment))
       : appointments.map(appointment => toSafeAppointmentForMechanic(appointment));
