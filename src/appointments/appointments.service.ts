@@ -42,6 +42,8 @@ export class AppointmentsService {
       throw new ForbiddenException('No puedes agendar citas para vehículos que no te pertenecen');
     }
 
+    const client = await this.usersService.findByIdOrThrow(clientId);
+
     const schedule = await this.schedulesService.getScheduleById(scheduleId);
     if (!schedule.availableHours.includes(hour)) {
       throw new BadRequestException('La hora seleccionada no está disponible');
@@ -70,6 +72,12 @@ export class AppointmentsService {
       message: `El cliente ha agendado una cita para el vehículo ${vehicle.licensePlate} el ${date} a las ${hour}`,
       metadata: { appointmentId: savedAppointment.id }
     });
+
+    // Populate relations for response
+    savedAppointment.client = client;
+    savedAppointment.mechanic = mechanic;
+    savedAppointment.vehicle = vehicle;
+    savedAppointment.schedule = schedule;
 
     return savedAppointment;
   }
